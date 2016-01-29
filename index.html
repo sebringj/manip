@@ -1,146 +1,154 @@
 <!doctype html>
 <html>
-  <head>
-    <title>testing 123</title>
-    <style>
-      canvas {
-        display: inline-block;
-				margin: 10px 10px 0 0;
-      }
-    </style>
-  </head>
-  <body>
-    <input type="file" id="files" name="files[]" multiple />
-		<div id="panel">
-			<button id="rotate">rotate all</button>
-			<button id="upload">upload all</button>
-		</div>
-    <div id="surface">
 
-    </div>
-    <!-- <script src="./bundle.js"></script> -->
-		<script src="./canvas-to-blob.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
-    <script>
-      'use strict';
+<head>
+  <title>testing 123</title>
+  <style>
+    canvas {
+      display: inline-block;
+      margin: 10px 10px 0 0;
+    }
+  </style>
+</head>
 
-			function getSignature() {
-				return new Promise(function(resolve, reject) {
-					var xhr = new XMLHttpRequest();
-					xhr.open('GET', 'http://localhost:3000/sign_s3', true);
-					xhr.onreadystatechange = function(ev) {
-						if (xhr.readyState === 4) {
-							if (xhr.status === 200)
-								resolve(JSON.parse(xhr.responseText));
-							else
-								reject({ err: 'request failed' });
-						}
-					};
-					xhr.send(null);
-				});
-			}
+<body>
+  <input type="file" id="files" name="files[]" multiple />
+  <div id="panel">
+    <button id="rotate">rotate all</button>
+    <button id="upload">upload all</button>
+  </div>
+  <div id="surface">
 
-			function upload(options) {
-				var signed = options.signed;
-				var canvas = options.canvas;
-				var file = options.file;
-				var formData = new FormData();
-				var key = file.name;
-				canvas.toBlob(function(blob) {
-					formData.append('key', 'uploads/' + file.name);
-					formData.append('AWSAccessKeyId', signed.awsAccessKey);
-					formData.append('acl', 'public-read');
-					formData.append('policy', signed.policy);
-					formData.append('signature', signed.signature);
-					formData.append('Content-Type', '$Content-Type');
-					formData.append('file', blob);
+  </div>
+  <!-- <script src="./bundle.js"></script> -->
+  <script src="./canvas-to-blob.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
+  <script>
+    'use strict';
 
-					var xhr = new XMLHttpRequest();
-					xhr.open('POST', signed.postUrl, true);
-					xhr.upload.addEventListener('progress', function(ev) {
-						// todo
-					}, false);
-					xhr.onreadystatechange = function() {
-						if (xhr.readyState != 4)
-							return;
-						console.log('uploaded ' + file.name);
-					};
-					xhr.send(formData);
-				}, file.type);
-			}
-
-      function getImage(file) {
-        return new Promise(function(resolve, reject) {
-          if (file.type.indexOf('image/') !== 0) return;
-          var fileReader = new FileReader();
-          fileReader.onload = function(dataUrl) {
-            var image = new Image();
-            image.addEventListener('load', function() {
-              var canvas = document.createElement('canvas');
-              canvas.width = image.width;
-              canvas.height = image.height;
-              var context = canvas.getContext('2d');
-              context.drawImage(image, 0, 0);
-              resolve({
-                file: file,
-                fileReader: fileReader,
-                canvas: canvas,
-                context: context
+    function getSignature() {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://localhost:3000/sign_s3', true);
+        xhr.onreadystatechange = function(ev) {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200)
+              resolve(JSON.parse(xhr.responseText));
+            else
+              reject({
+                err: 'request failed'
               });
-            });
-            image.addEventListener('error', function() {
-              reject({ err: 'img error' });
-            });
-            image.src = fileReader.result;
-          };
-          fileReader.readAsDataURL(file);
-        });
-      }
-
-      function getImages(selector, callback) {
-        var images = document.querySelector('#images');
-        document.querySelector(selector).addEventListener(
-          'change', function(ev) {
-            var files = ev.target.files;
-            var promises = [];
-            for(var i = 0; i < files.length; i++) {
-              promises.push(getImage(files[i]));
-            }
-            Promise.all(promises).then(function done(list) {
-              callback(list);
-            });
           }
-        );
-      }
-    </script>
-
-    <script>
-			var images;
-      getImages('#files', function(list) {
-        var surface = document.querySelector('#surface');
-        list.forEach(function(image) {
-          if (!image.err)
-            surface.appendChild(image.canvas);
-        });
-
-				getSignature()
-				.then(function(signed) {
-					list.forEach(function(image) {
-	          if (!image.err) {
-							upload({
-								signed: signed,
-								canvas: image.canvas,
-								context: image.context,
-								file: image.file
-							});
-	            surface.appendChild(image.canvas);
-						}
-	        });
-				})
-				.catch(function(err) {
-					console.error(err);
-				});
+        };
+        xhr.send(null);
       });
-    </script>
-  </body>
+    }
+
+    function upload(options) {
+      var signed = options.signed;
+      var canvas = options.canvas;
+      var file = options.file;
+      var formData = new FormData();
+      var key = file.name;
+      canvas.toBlob(function(blob) {
+        formData.append('key', 'uploads/' + file.name);
+        formData.append('AWSAccessKeyId', signed.awsAccessKey);
+        formData.append('acl', 'public-read');
+        formData.append('policy', signed.policy);
+        formData.append('signature', signed.signature);
+        formData.append('Content-Type', '$Content-Type');
+        formData.append('file', blob);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', signed.postUrl, true);
+        xhr.upload.addEventListener('progress', function(ev) {
+          // todo
+        }, false);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState != 4)
+            return;
+          console.log('uploaded ' + file.name);
+        };
+        xhr.send(formData);
+      }, file.type);
+    }
+
+    function getImage(file) {
+      return new Promise(function(resolve, reject) {
+        if (file.type.indexOf('image/') !== 0) return;
+        var fileReader = new FileReader();
+        fileReader.onload = function(dataUrl) {
+          var image = new Image();
+          image.addEventListener('load', function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            var context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
+            resolve({
+              file: file,
+              fileReader: fileReader,
+              canvas: canvas,
+              context: context
+            });
+          });
+          image.addEventListener('error', function() {
+            reject({
+              err: 'img error'
+            });
+          });
+          image.src = fileReader.result;
+        };
+        fileReader.readAsDataURL(file);
+      });
+    }
+
+    function getImages(selector, callback) {
+      var images = document.querySelector('#images');
+      document.querySelector(selector).addEventListener(
+        'change',
+        function(ev) {
+          var files = ev.target.files;
+          var promises = [];
+          for (var i = 0; i < files.length; i++) {
+            promises.push(getImage(files[i]));
+          }
+          Promise.all(promises).then(function done(list) {
+            callback(list);
+          });
+        }
+      );
+    }
+  </script>
+
+  <script>
+    var images;
+    getImages('#files', function(list) {
+      var surface = document.querySelector('#surface');
+      list.forEach(function(image) {
+        if (!image.err)
+          surface.appendChild(image.canvas);
+      });
+
+      getSignature()
+        .then(function(signed) {
+          list.forEach(function(image) {
+            if (!image.err) {
+              upload({
+                signed: signed,
+                canvas: image.canvas,
+                context: image.context,
+                file: image.file
+              });
+              surface.appendChild(image.canvas);
+            }
+          });
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+    });
+  </script>
+</body>
+
 </html>
