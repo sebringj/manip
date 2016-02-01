@@ -48,32 +48,37 @@
     }
 
     function upload(options) {
-      var signed = options.signed;
-      var canvas = options.canvas;
-      var file = options.file;
-      var formData = new FormData();
-      var key = file.name;
-      canvas.toBlob(function(blob) {
-        formData.append('key', 'uploads/' + file.name);
-        formData.append('AWSAccessKeyId', signed.awsAccessKey);
-        formData.append('acl', 'public-read');
-        formData.append('policy', signed.policy);
-        formData.append('signature', signed.signature);
-        formData.append('Content-Type', '$Content-Type');
-        formData.append('file', blob);
+      return new Promise(function(resolve, reject) {
+        var signed = options.signed;
+        var canvas = options.canvas;
+        var file = options.file;
+        var formData = new FormData();
+        var key = file.name;
+        canvas.toBlob(function(blob) {
+          formData.append('key', 'uploads/' + file.name);
+          formData.append('AWSAccessKeyId', signed.awsAccessKey);
+          formData.append('acl', 'public-read');
+          formData.append('policy', signed.policy);
+          formData.append('signature', signed.signature);
+          formData.append('Content-Type', '$Content-Type');
+          formData.append('file', blob);
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', signed.postUrl, true);
-        xhr.upload.addEventListener('progress', function(ev) {
-          // todo
-        }, false);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState != 4)
-            return;
-          console.log('uploaded ' + file.name);
-        };
-        xhr.send(formData);
-      }, file.type);
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', signed.postUrl, true);
+          xhr.upload.addEventListener('progress', function(ev) {
+            // todo
+          }, false);
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState != 4)
+              return;
+            if (xhr.status >= 200 && xhr.status < 300)
+              resolve(options);
+            else
+              reject(options);
+          };
+          xhr.send(formData);
+        }, file.type);
+      });
     }
 
     function getImage(file) {
@@ -143,19 +148,25 @@
     document.querySelector('#upload').addEventListener('click', function() {
       getSignature()
         .then(function(signed) {
+          var uploads = [];
           images.forEach(function(image) {
             if (!image.err) {
-              upload({
+              uploads.push(upload({
                 signed: signed,
                 canvas: image.canvas,
                 context: image.context,
                 file: image.file
-              });
-              surface.appendChild(image.canvas);
+              }));
             }
           });
+          return Promise.all(uploads);
+        })
+        .then(function(results) {
+          console.log('uploads successful');
+          console.log(results);
         })
         .catch(function(err) {
+          console.log('oops');
           console.error(err);
         });
     });
