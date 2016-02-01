@@ -48,13 +48,13 @@
     }
 
     function upload(options) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function definePromise(resolve, reject) {
         var signed = options.signed;
         var canvas = options.canvas;
         var file = options.file;
         var formData = new FormData();
         var key = file.name;
-        canvas.toBlob(function(blob) {
+        canvas.toBlob(function handleBlob(blob) {
           formData.append('key', 'uploads/' + file.name);
           formData.append('AWSAccessKeyId', signed.awsAccessKey);
           formData.append('acl', 'public-read');
@@ -82,10 +82,10 @@
     }
 
     function getImage(file) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function definePromise(resolve, reject) {
         if (file.type.indexOf('image/') !== 0) return;
         var fileReader = new FileReader();
-        fileReader.onload = function(dataUrl) {
+        fileReader.onload = function onFileReaderLoad(dataUrl) {
           var image = new Image();
           image.addEventListener('load', function() {
             var canvas = document.createElement('canvas');
@@ -103,7 +103,7 @@
               image: image
             });
           });
-          image.addEventListener('error', function() {
+          image.addEventListener('error', function onImageError() {
             reject({
               err: 'img error'
             });
@@ -118,7 +118,7 @@
       var images = document.querySelector('#images');
       document.querySelector(selector).addEventListener(
         'change',
-        function(ev) {
+        function onFilePickerChange(ev) {
           var files = ev.target.files;
           var promises = [];
           for (var i = 0; i < files.length; i++) {
@@ -137,7 +137,7 @@
 
     getImages('#files', function(list) {
       var surface = document.querySelector('#surface');
-      list.forEach(function(image) {
+      list.forEach(function handleImage(image) {
         if (!image.err) {
           surface.appendChild(image.canvas);
           images.push(image);
@@ -145,9 +145,9 @@
       });
     });
 
-    document.querySelector('#upload').addEventListener('click', function() {
+    document.querySelector('#upload').addEventListener('click', function onUploadClick(ev) {
       getSignature()
-        .then(function(signed) {
+        .then(function doUploads(signed) {
           var uploads = [];
           images.forEach(function(image) {
             if (!image.err) {
@@ -161,17 +161,17 @@
           });
           return Promise.all(uploads);
         })
-        .then(function(results) {
+        .then(function receiveUploadSuccess(results) {
           console.log('uploads successful');
           console.log(results);
         })
-        .catch(function(err) {
+        .catch(function receiveUploadFail(err) {
           console.log('oops');
           console.error(err);
         });
     });
 
-    document.querySelector('#rotate').addEventListener('click', function() {
+    document.querySelector('#rotate').addEventListener('click', function rotate() {
       images.forEach(function(image) {
         image.context.clearRect(0, 0, image.canvas.width, image.canvas.height);
         image.context.rotate(0.5);
