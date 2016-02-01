@@ -7,6 +7,7 @@
     canvas {
       display: inline-block;
       margin: 10px 10px 0 0;
+      background-color: #000;
     }
   </style>
 </head>
@@ -25,6 +26,8 @@
   <script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
   <script>
     'use strict';
+
+    var idInc = 0;
 
     function getSignature() {
       return new Promise(function(resolve, reject) {
@@ -81,6 +84,8 @@
           var image = new Image();
           image.addEventListener('load', function() {
             var canvas = document.createElement('canvas');
+            canvas.id = 'canvas_' + idInc;
+            idInc++;
             canvas.width = image.width;
             canvas.height = image.height;
             var context = canvas.getContext('2d');
@@ -89,7 +94,8 @@
               file: file,
               fileReader: fileReader,
               canvas: canvas,
-              context: context
+              context: context,
+              image: image
             });
           });
           image.addEventListener('error', function() {
@@ -122,17 +128,22 @@
   </script>
 
   <script>
-    var images;
+    var images = [];
+
     getImages('#files', function(list) {
       var surface = document.querySelector('#surface');
       list.forEach(function(image) {
-        if (!image.err)
+        if (!image.err) {
           surface.appendChild(image.canvas);
+          images.push(image);
+        }
       });
+    });
 
+    document.querySelector('#upload').addEventListener('click', function() {
       getSignature()
         .then(function(signed) {
-          list.forEach(function(image) {
+          images.forEach(function(image) {
             if (!image.err) {
               upload({
                 signed: signed,
@@ -147,6 +158,14 @@
         .catch(function(err) {
           console.error(err);
         });
+    });
+
+    document.querySelector('#rotate').addEventListener('click', function() {
+      images.forEach(function(image) {
+        image.context.clearRect(0, 0, image.canvas.width, image.canvas.height);
+        image.context.rotate(0.5);
+        image.context.drawImage(image.image, 0, 0);
+      });
     });
   </script>
 </body>
