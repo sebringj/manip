@@ -18,12 +18,10 @@
     <button id="rotate">rotate all</button>
     <button id="upload">upload all</button>
   </div>
-  <div id="surface">
-
-  </div>
+  <div id="surface"></div>
   <!-- <script src="./bundle.js"></script> -->
   <script src="./canvas-to-blob.min.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
   <script>
     'use strict';
 
@@ -38,9 +36,7 @@
             if (xhr.status === 200)
               resolve(JSON.parse(xhr.responseText));
             else
-              reject({
-                err: 'request failed'
-              });
+              reject({ err: 'request failed' });
           }
         };
         xhr.send(null);
@@ -116,9 +112,7 @@
 
     function getImages(selector, callback) {
       var images = document.querySelector('#images');
-      document.querySelector(selector).addEventListener(
-        'change',
-        function onFilePickerChange(ev) {
+      document.querySelector(selector).addEventListener('change', function onFilePickerChange(ev) {
           var files = ev.target.files;
           var promises = [];
           for (var i = 0; i < files.length; i++) {
@@ -135,7 +129,7 @@
   <script>
     var images = [];
 
-    getImages('#files', function(list) {
+    getImages('#files', function setImages(list) {
       var surface = document.querySelector('#surface');
       list.forEach(function handleImage(image) {
         if (!image.err) {
@@ -171,8 +165,8 @@
         });
     });
 
-    document.querySelector('#rotate').addEventListener('click', function rotate() {
-      images.forEach(function(image) {
+    document.querySelector('#rotate').addEventListener('click', function rotateAll() {
+      images.forEach(function rotateOne(image) {
         image.context.clearRect(0, 0, image.canvas.width, image.canvas.height);
         image.context.rotate(0.5);
         image.context.drawImage(image.image, 0, 0);
