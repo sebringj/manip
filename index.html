@@ -17,6 +17,7 @@
   <div id="panel">
     <button id="rotate">rotate all</button>
     <button id="upload">upload all</button>
+    <button id="loadFromS3">Upload from S3</button>
   </div>
   <div id="surface"></div>
   <!-- <script src="./bundle.js"></script> -->
@@ -24,6 +25,8 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
   <script>
     'use strict';
+
+    var src = 'https://emeraldcodeuploads.s3.amazonaws.com/uploads/8003ebb59dc24456a84003a0be816758.jpg';
 
     var idInc = 0;
 
@@ -137,6 +140,35 @@
           images.push(image);
         }
       });
+    });
+
+    document.querySelector('#loadFromS3').addEventListener('click', function loadDirect() {
+      var image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.id = 'canvas_' + idInc;
+        idInc++;
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+        getSignature()
+        .then(function(signed) {
+          return upload({
+            canvas: canvas,
+            file: { name: Date.now(), type: 'image/png' },
+            signed: signed
+          });
+        })
+        .then(function(obj) {
+          console.log(obj);
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+      };
+      image.src = src;
     });
 
     document.querySelector('#upload').addEventListener('click', function onUploadClick(ev) {
